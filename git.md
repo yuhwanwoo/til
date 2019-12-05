@@ -140,4 +140,4 @@ git add .  입력하고
 
 git commit -m '원하는 메시지'
 
-git push origin master
+git push origin master![gitpic](images/gitpic.PNG)
