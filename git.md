@@ -129,3 +129,15 @@ Branch 'master' set up to track remote branch 'master' from 'origin'.
 origin 원격 저장소에 push 하게 되며, github에서 확인할 수 있다.
 
 이후 작업 과정에서는 add-> commit 으로 이력을 남기고 push로 업로드 하면 된다.
+
+
+
+새로운거(내용) 업데이트 하면  파일 저장하고
+
+git status 입력 후 확인하고 
+
+git add .  입력하고
+
+git commit -m '원하는 메시지'
+
+git push origin master
