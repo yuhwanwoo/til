@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package polymorphism;
 
 public class BeanFactory {
@@ -11,17 +10,3 @@ public class BeanFactory {
 		return null;
 	}
 }
-=======
-package polymorphism;
-
-public class BeanFactory {
-	public Object getBean(String beanName) {
-		if(beanName.equals("samsung")){
-			return new SamsungTV();
-		}else if(beanName.equals("lg")){
-			return new LgTV();
-		}
-		return null;
-	}
-}
->>>>>>> ed3138fd25c5bf4676156d4e59c59591e4b42fea
