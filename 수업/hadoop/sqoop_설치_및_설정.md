@@ -8,7 +8,11 @@
 
 #### 다음으로 다운 명령어로 다운링크로 다운 받는다
 
+(wget 명령어)
+
 ![image-20200312112220055](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200312112220055.png)
+
+
 
 
 
