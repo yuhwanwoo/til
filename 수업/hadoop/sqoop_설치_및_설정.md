@@ -1,8 +1,10 @@
 ### sqoop 설치 및 설정
 
-
-
 ![image-20200312110803396](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200312110803396.png)
+
+![image-20200312123310613](images/image-20200312123310613.png)
+
+
 
 
 
@@ -12,7 +14,7 @@
 
 ![image-20200312112220055](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200312112220055.png)
 
-
+![image-20200312123330932](images/image-20200312123330932.png)
 
 
 
@@ -20,12 +22,20 @@ ls로 파일이 깔렸는지 확인 후 명령어로 압축을 푼다
 
 ![image-20200312112313609](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200312112313609.png)
 
+![image-20200312123344997](images/image-20200312123344997.png)
+
+
+
 
 
 
 #### 하둡 홈 디렉토리에 숨겨진 파일인 .bashrc를 수정해야한다.
 
 ![image-20200312112645230](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200312112645230.png)
+
+![image-20200312123412371](images/image-20200312123412371.png)
+
+
 
 #### 그 후 명령어로 적용시킨다. (source)
 
@@ -35,7 +45,7 @@ source .bashrc
 
 ![image-20200312114314966](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200312114314966.png)
 
-
+![image-20200312123423224](images/image-20200312123423224.png)
 
 #### 그 후 ojdbc6.jar 파일을 리눅스 sqoop 홈디렉토리의 lib폴더에 복사한다.
 
