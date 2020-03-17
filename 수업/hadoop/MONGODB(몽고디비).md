@@ -521,3 +521,478 @@ pullAll로 하면 지워진다.(pull은 조건하나 pullAll은 조건여러개)
 
 ![image-20200316162853859](images/image-20200316162853859.png)
 
+
+
+db.score.find().pretty()를 쓰면 정리되어 볼 수 있다.
+
+밑에 문제와 함께 캡쳐했음
+
+
+
+------------------------------
+
+
+
+##### 문제 
+
+다음과 같은 조건으로 document를 구성해 보도록 하겠습니다.
+
+게시물과 댓글을 mongodb에 저장
+
+\1. board 컬렉션을 생성
+
+\2. document는 5개 insert
+
+no,id,title,content,count,writedate
+
+\3. 2번째 게시물에는 댓글이 3개 추가되도록
+
+update - 하위object와 배열로 구성
+
+댓글의 필드
+
+content,count1,count2,writedate
+
+=> **코드와 실행결과 캡쳐**
+
+
+
+db.board.insert({no:1,id:"multi1",title:"오늘은월요일"        ,content:"어렵다",count:1, writedate:new Date()})      db.board.insert({no:2,id:"multi2",title:"mongodb"         ,content:"배열에 대해서",count:1,writedate:new Date()})      db.board.insert({no:3,id:"multi3",title:"mongodb"        ,content:"find()",count:1,writedate:new Date()})      db.board.insert({no:4,id:"multi4",title:"mongodb"       ,content:"데이터구성하기",count:1, writedate:new Date()})      db.board.insert({no:5,id:"multi15",title:"내일은"      ,content:"화요일",count:1,writedate:new Date()})
+
+
+
+![image-20200317094411941](images/image-20200317094411941.png)
+
+
+
+------------------------------
+
+
+
+#### 5. mongoDB에 저장된 데이터 조회하기 - find()
+
+
+
+
+
+-------------
+
+insert와 save의 차이
+
+![image-20200317094803628](images/image-20200317094803628.png)
+
+![image-20200317095128512](images/image-20200317095128512.png)
+
+
+
+![image-20200317095240747](images/image-20200317095240747.png)
+
+
+
+------------------------
+
+
+
+
+
+count로 데이터의 개수를 알 수 있다.
+
+![image-20200317095314055](images/image-20200317095314055.png)
+
+
+
+while문을 통해서 var x 를 이용한 데이터 넣기
+
+![image-20200317102133237](images/image-20200317102133237.png)
+
+
+
+![image-20200317102234706](images/image-20200317102234706.png)
+
+
+
+1) find
+
+​	db.컬렉션명.find(조건,조회할 필드에 대한 명시)
+
+ - db.컬렉션명.find({})와 동일
+
+   :{}안에 아무것도 없으면 전체 데이터 조회
+
+ - 조건,조회할 필드에 대한 명시 모두 json
+
+ - 조회할 필드의 정보 명시
+
+   형식:{필드명:1..} : 화면에 표시하고 싶은 필드
+
+   ​		 {필드명:0} : 명시한 필드가 조회되지 않도록 처리
+
+[조건]
+
+$lt : <
+
+$gt : >
+
+$lte : <=
+
+$gte : >=
+
+$or : 여러 필드를 이용해서 같이 비교가능
+
+$and : and 연산
+
+$in : 하나의 필드에서만 비교
+
+$nin :  non in		=>  in으로 정의한 조건을 제외한 documnent를 조회
+
+
+
+\- addr이 인천인 데이터 : id, name, dept, addr
+
+​	db.score.find({addr:"인천"},{id:1,name:1,dept:1,addr:1})
+
+![image-20200317103604833](images/image-20200317103604833.png)
+
+
+
+\- score컬렉션에서 java가 90점 이상인 document조회
+
+​	id,name,dept,java만 출력
+
+​	db.score.find({java: {$gte:90}},{id:1,name:1,dept:1,java:1,_id:0})
+
+![image-20200317103943146](images/image-20200317103943146.png)
+
+
+
+\- dept가 인사이거나 addr이 인천인 데이터 조회
+
+​	db.score.find({$or:[{dept:"인사"},{addr:"인천"}]})
+
+​		(조건이 여러개기 때문에 배열로했다)
+
+![image-20200317104558225](images/image-20200317104558225.png)
+
+
+
+
+
+\- id가 song이거나,kang이거나 hong인 데이터 조회
+
+​	db.score.find({$or:[{id:"song"},{id:"hong"},{id:"kang"}]})
+
+db.score.find({id:{$in:["song","hong","kang"]}})도 같은 결과가 나온다!
+
+![image-20200317104857321](images/image-20200317104857321.png)
+
+
+
+\- id가 song,kang, hong이 아닌 데이터 조회
+
+![image-20200317105543113](images/image-20200317105543113.png)
+
+
+
+null도 있다 
+
+![image-20200317111145824](images/image-20200317111145824.png)
+
+
+
+2) 조회메소드
+
+ - findOne() : 첫 번째 document만 리턴
+
+ - find() : 모든 document리턴
+
+ - count() : 행의 개수를 리턴
+
+ - sort({필드명:sort옵션}) : 정렬
+
+   ​											1 => 오름차순
+
+   ​											-1 => 내림차순
+
+- limit(숫자) : 숫자만큼의 document만 출력
+
+- skip(숫자) : 숫자만큼의 document를 skip하고 조회
+
+
+
+
+
+sort
+
+db.score.find().sort({id:1});
+
+![image-20200317111631180](images/image-20200317111631180.png)
+
+
+
+limit
+
+![image-20200317111737708](images/image-20200317111737708.png)
+
+위의 5개 document만
+
+
+
+
+
+skip
+
+![image-20200317111812639](images/image-20200317111812639.png)
+
+위 5개 document 제외하고
+
+
+
+
+
+3) 정규표현식을 적용
+
+​	db.컬렉션명.find({조건필드명:/정규표현식/옵션})
+
+
+
+#### [기호]
+
+| : or
+
+^ : ^뒤의 문자로 시작하는지 체크
+
+i 옵션을 주면 대소문자 구분없이 조회가능
+
+\[ ]: 영문자 하나는 한 글자를 희미하고 []로 묶으면 여러 글자를 표현
+
+​				[a-i] a에서 i까지의 모든 영문자 
+
+
+
+
+
+[옵션]
+
+\- id가 kim과 park인 document조회
+
+db.score.find({id:/kim|park/})
+
+![image-20200317112457193](images/image-20200317112457193.png)
+
+그러나 이건 대소문자를 구분하기때문에 KIM은 안나왔다
+
+
+
+i옵션을 주면 대소문자 구분없이 조회가능
+
+db.score.find({id:/kim|park/i})
+
+![image-20200317112550036](images/image-20200317112550036.png)
+
+
+
+
+
+\- id가 k로 시작하는 documnet조회
+
+db.score.find({id:/^k/})
+
+![image-20200317112802285](images/image-20200317112802285.png)
+
+역시 i옵션이 먹힌다
+
+![image-20200317112833094](images/image-20200317112833094.png)
+
+
+
+\- [a-i]까지 영문이 있는 id를 조회 
+
+db.score.find({id:/[a-i]/})
+
+
+
+\- id가 k-p로 시작하는 document조회
+
+db.score.find({id:/^[k-p]/})
+
+![image-20200317113415774](images/image-20200317113415774.png)
+
+
+
+\- id에서 k가 들어가거나 p가 들어가있는 document조회
+
+db.score.find({id:/[kp]/}) 
+
+![image-20200317113635450](images/image-20200317113635450.png)
+
+
+
+not을 이용해서 null아닌거
+
+![image-20200317141635591](images/image-20200317141635591.png)
+
+
+
+
+
+servlet 값이 가장 작은 값 (null 제외시키기)
+
+db.score.find({servlet:{$not:{$exists:null}}}).sort({servlet:1}).limit(1);
+
+![image-20200317141722741](images/image-20200317141722741.png)
+
+
+
+#### 6. mongoDB에 저장된 데이터 삭제하기 - remove()
+
+ - 조건을 정의하는 방법은 find()나 update()와 동일
+
+   db.score.remove({servlet:{$lt:80}});
+
+![image-20200317114100465](images/image-20200317114100465.png)
+
+
+
+#### 7. Aggregation
+
+ - group by와 동일 개념
+
+ - 간단한 집계를 구하는 경우 mapreduce를 적용하는 것보다 간단하게 작업
+
+ - Pipeline을 내부에서 구현
+
+   한 연산의 결과가 또 다른 연산의 input데이터로 활용
+
+   https://docs.mongodb.com/v3.6/aggregation/#aggregation-pipeline 의 그림 참고
+
+#### 1) 명령어(RDBMS와 비교)
+
+​	$match : where절, having절
+
+​	$group : group by
+
+​	$sort : order by
+
+​	$avg : avg그룹함수
+
+​	$sum : sum그룹함수
+
+​	$max : max그룹합수
+
+
+
+##### [형식]
+
+db.컬렉션명.aggregate(aggregate명령어를 정의)
+
+​										\--------------------------------------
+
+​										여러가지를 적용해야 하는 경우
+
+​										배열
+
+​		$group:{_id:그룹으로 표시할 필드명,
+
+​						연산결과를 저장할 필드명:{연산함수:값}}
+
+​																					   \---->숫자나 필드참조
+
+​		$match:{필드명:{연산자:조건값}}
+
+​										\------------------->
+
+​	
+
+\- addr별 인원수
+
+​	db.exam.aggregate([
+
+​										{$group:{_id:"$addr"
+
+​												,num:{$sum:1}}
+
+}
+
+])
+
+db.exam.aggregate([{$group:{_id:"$addr",num:{$sum:1}}}])
+
+
+
+\- dept별 인원수
+
+db.exam.aggregate([{$group:{_id:"$dept",num:{$sum:1}}}])
+
+![image-20200317151033355](images/image-20200317151033355.png)
+
+\- dept별 java점수의 평균
+
+db.exam.aggregate([{$group:{_id:"$dept",avg:{$avg:"$java"}}}])
+
+![image-20200317151018106](images/image-20200317151018106.png)
+
+\- addr별 servlet합계
+
+db.exam.aggregate([{$group:{_id:"$addr",서블릿합계:{$sum:"$servlet"}}}]);
+
+![image-20200317151753295](images/image-20200317151753295.png)
+
+
+
+\- dept별 java점수의 평균 단, addr이 인천인 데이터만 작업
+
+​	$match를 추가
+
+db.exam.aggregate([{$match:{addr:"인천"}},{$group:{_id:"$dept",평균:{$avg:"$java"}}}])
+
+![image-20200317152505519](images/image-20200317152505519.png)
+
+
+
+
+
+1. dept가 인사인 document의 servlet평균 구하기
+
+   db.exam.aggregate([{$match:{dept:"인사"}},{$group:{_id:"$dept",평균:{$sum:1}}}])
+
+2. java가 80점이 넘는 사람들의 부서별로 몇 명인지 구하기
+
+   db.exam.aggregate([{$match:{java:{$gte:80}}},{$group:{_id:"$dept",합계:{$sum:1}}}]))
+
+   ![image-20200317153920419](images/image-20200317153920419.png)
+
+3. 2번 결과를 인원수데이터를 내림차순으로 정렬해 보세요.
+
+   
+
+
+
+
+
+
+
+### 부가
+
+페이징과  솔트를 동시에 해주는 유용한기능
+
+![image-20200317163753701](images/image-20200317163753701.png)
+
+출처 : https://docs.spring.io/spring-data/mongodb/docs/2.2.5.RELEASE/reference/html/#repositories
+
+
+
+![image-20200317163331017](images/image-20200317163331017.png)
+
+
+
+자바 프로젝트 생성 후
+
+dependency추가하기
+
+![image-20200317163940073](images/image-20200317163940073.png)
+
+
+
+
+
+![image-20200317171021831](images/image-20200317171021831.png)
