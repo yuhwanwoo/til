@@ -620,6 +620,12 @@ str_trim(data)
 
 
 
+
+
+![image-20200321180053135](images/image-20200321180053135.png)
+
+
+
 ```R
 install.packages("mongolite")
 library("stringr")
