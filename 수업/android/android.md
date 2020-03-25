@@ -321,3 +321,35 @@ gravity : view내부에서의 정렬
 
 200은 오류 뜨는데 단위가 없어서 그런다 dp를 사용한다.
 
+
+
+#### l
+
+
+
+### AndroidMainifest.xml 
+
+```java
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="exam.day02.view.layout">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity"> // 액티비티에서 가장 먼저 실행될 액티비티부분
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />//
+										// 위아래 두개 없으면 첫번째 실행하는거 아니야
+                <category android:name="android.intent.category.LAUNCHER" />//
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
