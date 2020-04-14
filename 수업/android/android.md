@@ -493,3 +493,27 @@ gravity : view내부에서의 정렬
    ​		=> 권한 성공 -> 기능이 실행되도록
 
    ​		=> 권한 실패 -> Preference를 통해 설정할 수 있도록 액티비티를 이동하거나 안내 메시지 출력
+
+
+
+
+
+
+
+
+
+## Fragment와  ViewPager
+
+문제
+
+1.Fragment로 작업한 예제를 ViewPager에 추가해서 동작하도록 작성
+
+* Fragment를 한 개 추가
+
+  지도가 출력되는 MainActivity도 추가
+
+4개의 Fragment가 ViewPager로 실행될 수 있도록
+
+
+
+https://4whomtbts.tistory.com/49 참고
