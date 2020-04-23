@@ -144,3 +144,25 @@ git push origin master
 
 ![gitpic](images/gitpic.PNG)
 
+
+
+### 3. 원격 저장소 활용 명령어
+
+1. 원격 저장소 목록 조회
+
+```bash
+$ git remote -v
+```
+
+2. 원격 저장소 설정 삭제
+
+```bash
+$ git remote rm {원격저장소이름}
+```
+
+3. 원격 저장소 설정
+
+```bash
+$ git remote add origin {url}
+```
+
