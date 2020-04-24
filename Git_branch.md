@@ -125,19 +125,133 @@
 > git이 auto merging을 진행하고, **commit이 발생된다.**
 
 1. feature/signout branch 생성 및 이동
+
+   ```bash
+   $ git checkout -b feature/signout
+   Switched to a new branch 'feature/signout'
+   
+   ```
+
+   
+
 2. 작업 완료 후 commit
+
+   ```bash
+   $ touch signout.txt
+   $ git add .
+   $ git commit -m 'Complete signout'
+   [feature/signout 51132e2] Complete signout
+    1 file changed, 0 insertions(+), 0 deletions(-)
+    create mode 100644 signout.txt
+   
+   ```
+
+   
+
 3. master 이동
+
+   ```bash
+   $ git checkout master
+   Switched to branch 'master'
+   ```
+
+   
+
 4. *master에 추가 commit 이 발생시키기!!*
+
    - **다른 파일을 수정 혹은 생성하세요!**
+
+   ```bash
+   $ touch hotfix.txt
+   $ git add .
+   $ git commit -m 'Hotfix'
+   [master 936fb42] Hotfix
+    1 file changed, 0 insertions(+), 0 deletions(-)
+    create mode 100644 hotfix.txt
+   
+   $ git log --oneline
+   936fb42 (HEAD -> master) Hotfix
+   927d410 complete test
+   5e99c38 Complete menu
+   fbec7a3 init
+   
+   $ git checkout feature/signout
+   Switched to branch 'feature/signout'
+   
+   $ git log --oneline
+   51132e2 (HEAD -> feature/signout) Complete signout
+   927d410 complete test
+   5e99c38 Complete menu
+   fbec7a3 init
+   
+   ```
+
+   
+
 5. master에 병합
+
+   ```bash
+   $ git checkout master
+   Switched to branch 'master'
+   
+   $ git merge feature/signout
+   Merge made by the 'recursive' strategy.
+    signout.txt | 0
+    1 file changed, 0 insertions(+), 0 deletions(-)
+    create mode 100644 signout.txt
+   
+   ```
+
+   
+
 6. 결과 -> 자동으로 *merge commit 발생*
+
    - vim 편집기 화면이 나타납니다.
    - 자동으로 작성된 커밋 메시지를 확인하고, `esc`를 누른 후 `:wq`를 입력하여 저장 및 종료를 합니다.
      - `w` : write
      - `q` : quit
    - 커밋이 확인 해봅시다.
+
+   ```bash
+   # vim 화면 나오는데 esc누르고 :wq 입력
+   
+   #나와서 로그를 확인해 본다.
+   $ git log --oneline
+   2df880d (HEAD -> master) Merge branch 'feature/signout'
+   936fb42 Hotfix
+   51132e2 (feature/signout) Complete signout
+   927d410 complete test
+   5e99c38 Complete menu
+   fbec7a3 init
+   
+   ```
+
+   
+
 7. 그래프 확인하기
+
+   ```bash
+   $ git log --oneline --graph
+   *   2df880d (HEAD -> master) Merge branch 'feature/signout'
+   |\
+   | * 51132e2 (feature/signout) Complete signout
+   * | 936fb42 Hotfix
+   |/
+   * 927d410 complete test
+   * 5e99c38 Complete menu
+   * fbec7a3 init
+   
+   ```
+
 8. branch 삭제
+
+   ```bash
+   $ git branch -d feature/signout
+   Deleted branch feature/signout (was 51132e2).
+   
+   ```
+
+   
 
 ------
 
@@ -153,25 +267,97 @@
 
 1. feature/board branch 생성 및 이동
 
+   ```bash
+   $ git checkout -b feature/board
+   ```
+
+   
+
 2. 작업 완료 후 commit
 
+   ```bash
+   $ touch board.txt
+   # README.md 생성 파일 수정
+   $ git add .
+   $ git commit -m 'Complete'
+   ```
+
+   
+
 3. master 이동
+
+   ```bash
+   $ git checkout master
+   
+   ```
+
+   
 
 4. *master에 추가 commit 이 발생시키기!!*
 
    - **동일 파일을 수정 혹은 생성하세요!**
 
+   ```bash
+   # README.md 파일 수정
+   $ git add .
+   $ git commit -m 'read update'
+   [master 08f4dd9] read update
+    1 file changed, 4 insertions(+)
+   ```
+
+   
+
 5. master에 병합
+
+   ```bash
+   $ git merge feature/board
+   Auto-merging README.md
+   CONFLICT (content): Merge conflict in README.md
+   Automatic merge failed; fix conflicts and then commit the result.
+   
+   ```
+
+   
 
 6. 결과 -> *merge conflict발생*
 
    > git status 명령어로 충돌 파일을 확인할 수 있음.
 
+   ```bash
+   $ git status
+   On branch master
+   You have unmerged paths.
+     (fix conflicts and run "git commit")
+     (use "git merge --abort" to abort the merge)
+   
+   Changes to be committed:
+           new file:   board.txt
+   
+   Unmerged paths:
+     (use "git add <file>..." to mark resolution)
+           both modified:   README.md
+   
+   ```
+
+   
+
 7. 충돌 확인 및 해결
+
+   ```bash
+   $ git merge feature/board
+   error: Merging is not possible because you have unmerged files.
+   hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+   hint: as appropriate to mark resolution and make a commit.
+   fatal: Exiting because of an unresolved conflict.
+   
+   $ git add .
+   ```
+
+   
 
 8. merge commit 진행
 
-   ```
+   ```bash
    $ git commit
    ```
 
@@ -183,4 +369,18 @@
 
 9. 그래프 확인하기
 
+   ```bash
+   $ git log --oneline --graph
+   ```
+
+   
+
 10. branch 삭제
+
+    ```bash
+    $ git branch -d feature/branch
+    Deleted branch feature/board (was 202e282).
+    
+    ```
+
+    

@@ -46,7 +46,7 @@ $git status //제일 중요해
 
 GUI(Graphic user Interface)   vs   CLI(command Line Interface)
 
-![image-20200423101619408](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423101619408.png)
+![image-20200423101619408](images/image-20200423101619408.png)
 
 
 
@@ -62,7 +62,7 @@ GUI(Graphic user Interface)   vs   CLI(command Line Interface)
 
 
 
-![image-20200423102249637](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423102249637.png)
+![image-20200423102249637](images\image-20200423102249637.png)
 
 * 아무 작업도 안한 상태이다
 
@@ -80,13 +80,13 @@ touch a.txt    // a.txt파일 생성
 
 
 
-![image-20200423102351013](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423102351013.png)
+![image-20200423102351013](images\image-20200423102351013.png)
 
 
 
 다음으로 status를 확인해보면
 
-![image-20200423102511386](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423102511386.png)
+![image-20200423102511386](images\image-20200423102511386.png)
 
 
 
@@ -113,7 +113,7 @@ $ touch <파일명>
 
 ### 1. add
 
-![image-20200423103129127](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423103129127.png)
+![image-20200423103129127](images\image-20200423103129127.png)
 
 ```bash
 $ touch a.txt
@@ -138,7 +138,7 @@ nothing added to commit but untracked files present (use "git add" to track)
 
 
 
-![image-20200423103216451](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423103216451.png)
+![image-20200423103216451](images\image-20200423103216451.png)
 
 ```bash
 $ git add a.txt
@@ -160,7 +160,7 @@ Changes to be committed:
 
 ### 2. commit
 
-![image-20200423103803237](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423103803237.png)
+![image-20200423103803237](images\image-20200423103803237.png)
 
 ```bash
 $ git commit -m 'Create a.txt'
@@ -189,15 +189,15 @@ $ git log --oneline
 
 ### 3. 추가 파일 변경 상태
 
-![image-20200423104124739](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104124739.png)
+![image-20200423104124739](images\image-20200423104124739.png)
 
 
 
-![image-20200423104158298](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104158298.png)
+![image-20200423104158298](images\image-20200423104158298.png)
 
 
 
-![image-20200423104018434](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104018434.png)
+![image-20200423104018434](images\image-20200423104018434.png)
 
 b.txt를 만들고 a.txt수정하고 git status를 하면
 
@@ -222,7 +222,7 @@ no changes added to commit (use "git add" and/or "git commit -a")
 
 
 
-![image-20200423104322718](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104322718.png)
+![image-20200423104322718](images\image-20200423104322718.png)
 
 ```bash
 $ git add a.txt
@@ -244,7 +244,7 @@ Untracked files:
 
 
 
-![image-20200423104409764](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104409764.png)
+![image-20200423104409764](images\image-20200423104409764.png)
 
 ```bash
 $ git add .
@@ -263,7 +263,7 @@ Changes to be committed:
 
 
 
-![image-20200423104502870](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104502870.png)
+![image-20200423104502870](images\image-20200423104502870.png)
 
 ```bash
 $ git commit -m 'a.txt 수정, b.txt 생성'
@@ -279,13 +279,13 @@ $ git commit -m 'a.txt 수정, b.txt 생성'
 
 a.txt와 b.txt를 수정한다.
 
-![image-20200423104706460](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104706460.png)
+![image-20200423104706460](images\image-20200423104706460.png)
 
-![image-20200423104749895](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104749895.png)
+![image-20200423104749895](images\image-20200423104749895.png)
 
 
 
-![image-20200423104816834](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423104816834.png)
+![image-20200423104816834](images\image-20200423104816834.png)
 
 
 
@@ -293,7 +293,7 @@ a.txt와 b.txt를 수정한다.
 
 > 주의!! 커밋 메시지 변경시 해시값 자체가 변경되어, 이미 원격저장소에 push한 이력에 대해서는 메시지 변경을 하면 안된다.
 
-![image-20200423105153643](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423105153643.png)
+![image-20200423105153643](images\image-20200423105153643.png)
 
 ```bash
 $ git commit --amend
@@ -305,23 +305,23 @@ $ git commit --amend
     * :wq
       * write+quite
 
-![image-20200423105514727](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423105514727.png)
+![image-20200423105514727](images\image-20200423105514727.png)
 
 ​								여기서 i를 누르면
 
-![image-20200423105651969](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423105651969.png)
+![image-20200423105651969](images\image-20200423105651969.png)
 
 ​						노란색 부분 수정가능
 
-![image-20200423105743455](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423105743455.png)
+![image-20200423105743455](images\image-20200423105743455.png)
 
 ​			esc 누르고 :wq 를 누른다.
 
-![image-20200423105851648](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423105851648.png)
+![image-20200423105851648](images\image-20200423105851648.png)
 
 ​				이렇게 된다.
 
-![image-20200423105918744](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423105918744.png)
+![image-20200423105918744](images\image-20200423105918744.png)
 
 
 
@@ -375,7 +375,7 @@ nothing to commit, working tree clean
 
 
 
-![image-20200423112705929](C:\Users\student\AppData\Roaming\Typora\typora-user-images\image-20200423112705929.png)
+![image-20200423112705929](images\image-20200423112705929.png)
 
 
 
