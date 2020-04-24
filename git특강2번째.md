@@ -34,6 +34,8 @@ https://blog.ull.im/engineering/2019/03/10/logs-on-git.html
 
 ### git => DVCS(분산형 버전관리 시스템)
 
+![image-20200423213600042](images/image-20200423213600042.png)
+
 
 
 ```bash
