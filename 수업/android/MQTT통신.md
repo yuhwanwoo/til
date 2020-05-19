@@ -4,29 +4,33 @@
 
 mosquitto를 깔고 환경변수를 추가한 후에 cmd창에
 
-![](C:\Users\student\Desktop\til\til\수업\arduino\1.PNG)
+![1](https://user-images.githubusercontent.com/22831002/82285417-641e9b80-99d6-11ea-84e1-8a48a2e03aa2.PNG)
+
+
 
 다른 cmd창 치운후에 
 
 입력하면 처음 창에 추가된다.
 
-![2](C:\Users\student\Desktop\til\til\수업\arduino\images\2.PNG)
+![2](https://user-images.githubusercontent.com/22831002/82285507-97612a80-99d6-11ea-8769-4d251c2f6620.PNG)
+
+
 
 또 다른 cmd창을 켜서
 
-![image-20200519103859655](C:\Users\student\Desktop\til\til\수업\arduino\images\9)
+![9](https://user-images.githubusercontent.com/22831002/82285519-9af4b180-99d6-11ea-878e-fe0ee3bb64e3.png)
 
 확인
 
-![image-20200519103921620](C:\Users\student\Desktop\til\til\수업\arduino\images\8)
+![8](https://user-images.githubusercontent.com/22831002/82285516-9a5c1b00-99d6-11ea-9c49-4934d31655ea.png)
 
 
 
 또다른 cmd창
 
-![image-20200519104220993](C:\Users\student\Desktop\til\til\수업\arduino\images\7)
+![7](https://user-images.githubusercontent.com/22831002/82285515-99c38480-99d6-11ea-9318-4867ac07c813.png)
 
-![image-20200519104333217](C:\Users\student\Desktop\til\til\수업\arduino\images\6)
+![6](https://user-images.githubusercontent.com/22831002/82285511-99c38480-99d6-11ea-9d42-1a3108f72b8d.png)
 
 iot sub 한곳에  가서 
 
@@ -36,13 +40,13 @@ C:\Users\student>mosquitto_sub -h 70.12.116.63 -t iot -p 1883
 
 
 
-![image-20200519105111584](C:\Users\student\Desktop\til\til\수업\arduino\images\5)
+![5](https://user-images.githubusercontent.com/22831002/82285510-992aee00-99d6-11ea-8f67-04c20c6e6d40.png)
 
 
 
 이후
 
-![image-20200519105154804](C:\Users\student\Desktop\til\til\수업\arduino\images\3)
+![3](https://user-images.githubusercontent.com/22831002/82285508-98925780-99d6-11ea-900b-b08172752ac8.png)
 
 이렇게 보내면 
 
@@ -50,5 +54,5 @@ C:\Users\student>mosquitto_sub -h 70.12.116.63 -t iot -p 1883
 
 결과값이 보내지게 된다.
 
-![image-20200519105235056](C:\Users\student\Desktop\til\til\수업\arduino\images\4)
+![4](https://user-images.githubusercontent.com/22831002/82285509-992aee00-99d6-11ea-98de-f04402f27d0e.png)
 
