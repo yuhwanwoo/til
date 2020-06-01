@@ -166,3 +166,26 @@ $ git remote rm {원격저장소이름}
 $ git remote add origin {url}
 ```
 
+
+
+
+
+### 4. 팀프로젝트할때 합치기 (이미 클론 되어있는 상태)
+
+pull 받고 branch 생성하고 status하고 push origin 한 다음에
+git사이트에서 요청 확인해서 오류 있으면 수정해서 합치기
+
+
+
+```bash
+$ git pull origin master
+$ git checkout -b music
+$ git add .
+$ git commit -m 'update wordcloud'
+$ git push origin music
+
+다음으로 사이트가서 pull 요청하기
+```
+
+
+
