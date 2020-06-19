@@ -142,7 +142,7 @@ from django.urls import path,include  # 여기서 include는 분리하기 위해
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('movies',include('movies.urls'))
+    path('movies/',include('movies.urls'))
 ]
 ```
 
@@ -540,3 +540,62 @@ admin.site.register(Movie, MovieAdmin)
 ![image](https://user-images.githubusercontent.com/22831002/84988487-07e99b80-b17d-11ea-90c6-40cbc9e10f4b.png)
 
 이렇게 바뀌게 된다.
+
+
+
+## Django ORM
+
+### index페이지에 전체 DB 보여주기
+
+* views.py
+
+```python
+from django.shortcuts import render
+from movies.models import Movie #Movie 데이터 가져와야하므로(?)
+
+# Create your views here.
+def index(request):
+    # 전체 데이터 가져오기
+    # 그 데이터 템플릿에게 넘겨주기
+    # 템플릿에서 반복문으로 각각의 게시글 pk, title 보여주기
+    movie=Movie.objects.all()
+    context={
+        'movies': movie
+    }
+    return render(request,"movies/index.html", context)
+```
+
+
+
+* index.html
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>게시판</h1>
+<hr>
+<a href="">NEW</a>
+<a href="">introduce</a>
+
+{% for movie in movies %}
+  <h3>{{movie.pk}}</h3>
+  <h4>{{movie.title}}</h4>
+  <h5>{{movie.content}}</h5>
+  <hr>
+{% endfor %}
+
+{% endblock %}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
