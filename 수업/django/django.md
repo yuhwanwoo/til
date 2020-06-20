@@ -589,9 +589,305 @@ def index(request):
 
 
 
+페이지를 확인해보면
+
+![image](https://user-images.githubusercontent.com/22831002/85186838-434bad80-b2d6-11ea-937e-2d3a9d61823b.png)
 
 
 
+
+
+### new페이지에서 글 작성하기
+
+
+
+* views.py
+
+![image](https://user-images.githubusercontent.com/22831002/85186970-0a600880-b2d7-11ea-983f-b30ca66320bf.png)
+
+```python
+from django.shortcuts import render,redirect
+from movies.models import Movie
+
+# Create your views here.
+def index(request):
+    # 전체 데이터 가져오기
+    # 그 데이터 템플릿에게 넘겨주기
+    # 템플릿에서 반복문으로 각각의 게시글 pk, title 보여주기
+    movie=Movie.objects.all()
+    context={
+        'movies': movie
+    }
+    return render(request,"movies/index.html", context)
+
+def new(request):
+    return render(request,'movies/new.html')
+
+def create(request):
+    title=request.POST.get('title')
+    text=request.POST.get('text')
+    Movie.objects.create(title=title,content=text)
+    return redirect('movies:index')
+```
+
+
+
+
+
+* 화면
+
+![image](https://user-images.githubusercontent.com/22831002/85187303-9a9f4d00-b2d9-11ea-9046-7c6b8d4545b2.png)
+
+* new.html
+
+```python
+{% block body %}
+<h1>글 작성 페이지</h1>
+
+<form action="{% url 'movies:create' %}" method="POST">
+  {% csrf_token %}
+  <label for="name">제목 : </label>
+  <input type="text" name="title">
+
+  <label for="cnt">내용 : </label>
+  <input type="text" name="text">
+
+  <input type="submit" value="글 작성">
+</form>
+{% endblock %}
+```
+
+
+
+* create.html
+
+```html
+{% block body %}
+<p>{{ title }}, {{ text }}</p>
+{% endblock %}
+```
+
+
+
+* index.html
+
+![image](https://user-images.githubusercontent.com/22831002/85187695-5b263000-b2dc-11ea-8af1-9ccaba981e68.png)
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>게시판</h1>
+<hr>
+<a href="{% url 'movies:new' %}">NEW</a>
+<a href="{% url 'movies:introduce' %}">introduce</a>
+
+{% for movie in movies %}
+  <h3>{{movie.pk}}</h3>
+  <h4>{{movie.title}}</h4>
+  <h5>{{movie.content}}</h5>
+  <hr>
+{% endfor %}
+
+{% endblock %}
+```
+
+
+
+* urls.py
+
+```python
+from django.urls import path
+from . import views
+
+app_name="movies"
+
+urlpatterns=[
+    path('index/', views.index, name="index"),
+    path('new/', views.new, name="new"),
+    path('create/', views.create, name="create"),
+    path('introduce/', views.introduce, name="introduce"),
+]
+```
+
+
+
+* csrf_token 이란??
+
+  * 내 DB에 어떠한 조작을 할 수 있는 요청을 보낼 땐 항상 세트로 넣어줘야 한다.
+  * 보안을 위한 것. (없어도 요청은 감)
+
+  redirect를 import하여 index로 redirect한다.
+
+  
+
+### index페이지에서 상세페이지 보기
+
+* urls.py  &  views.py
+
+```python
+# urls.py
+path('<int:movies_pk>detail/', views.detail, name="detail")
+
+# views.py
+def detail(request, movies_pk):
+    movie=Movie.objects.get(pk=movies_pk)
+    context={
+        'movie':movie
+    }
+    return render(request, 'movies/detail.html',context)
+```
+
+* index.html
+
+![image](https://user-images.githubusercontent.com/22831002/85188247-2e741780-b2e0-11ea-9f75-6025c2704b44.png)
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>게시판</h1>
+<hr>
+<a href="{% url 'movies:new' %}">NEW</a>
+<a href="{% url 'movies:introduce' %}">introduce</a>
+
+{% for movie in movies %}
+  <a href="{% url 'movies:detail' movie.pk %}"><h3>{{movie.pk}}번 째 글</h3></a>
+  <h4>{{movie.title}}</h4>
+  <h5>{{movie.content}}</h5>
+  <hr>
+{% endfor %}
+
+{% endblock %}
+```
+
+
+
+* detail.html
+
+```html
+{% block body %}
+<h1> 상세 페이지^^</h1>
+<h2>{{movie.pk}}번 째 글</h2>
+<h4>제목 : {{movie.title}}</h4>
+<h5>내용 : {{movie.content}}</h5>
+<p>생성 시간 : {{movie.created_at}}</p>
+<p>수정 시간 : {{movie.updated_at}}</p>
+<a href="{% url 'movies:index' %}">[back]</a>
+{% endblock %}
+```
+
+
+
+### 상세페이지에서 글 삭제하기
+
+* urls.py & views.py
+
+```python
+# urls.py
+path('<int:movies_pk>/delete/', views.delete, name="delete"),
+
+# views.py
+# 1. 특정 글 삭제를 위한 경로 작성
+# 1.1 /movies/delete/
+# 2. 글 삭제 처리를 해주는 view 작성
+# 3. 글 삭제 후, index page로 redirect
+# 4. 글 삭제를 위한 링크 detail에 작성
+def delete(request, movies_pk):
+    movie=Movie.objects.get(pk=movies_pk)
+    movie.delete()
+    return redirect('movies:index')
+```
+
+
+
+* detail.html
+
+```html
+{% block body %}
+<h1> 상세 페이지^^</h1>
+<h2>{{movie.pk}}번 째 글</h2>
+<h4>제목 : {{movie.title}}</h4>
+<h5>내용 : {{movie.content}}</h5>
+<p>생성 시간 : {{movie.created_at}}</p>
+<p>수정 시간 : {{movie.updated_at}}</p>
+<a href="{% url 'movies:delete' movie.pk %}">삭제</a> <!--추가한 부분-->
+<a href="{% url 'movies:index' %}">[back]</a>
+{% endblock %}
+```
+
+
+
+### 게시글 수정하기
+
+* urls.py & views.py
+
+```python
+# urls.py
+path('<int:movies_pk>/update/', views.update, name="update")
+
+# views.py
+# 1. 특정 글 수정을 위한 경로 생성
+# 1-1. /movies/1/edit
+# 2. 글 수정 template를 render하는 edit view 작성
+# 2-1. 해당 templateㄹ에 form tag 생성
+# 2-2. 각 input tag 내부에 기존 내용이 들어있어야 함.
+# 3. edit 보낸 데이터 처리를 위한 경로 생성
+# 3-1. /movies/1/update
+# 4. 글 수정 처리를 하는 update view 작성
+# 5. 해당 글 상세 페이지로 redirect
+# 6. 글 수정을 위한 edit 링크 해당 글 상세 페이지에 생성
+# 6-1. {% url 'movies:edit' movie.pk %}
+def edit(request, movies_pk):
+    movie=Movie.objects.get(pk=movies_pk)
+    context={
+        'movie':movie
+    }
+    return render(request, 'movies/edit.html', context)
+
+def update(request, movies_pk):
+    edit_title=request.POST.get('edit_title')
+    edit_content=request.POST.get('edit_content')
+    movie=Movie.objects.get(pk=movies_pk)
+    movie.title=edit_title
+    movie.content=edit_content
+    movie.save()
+    return redirect('movies:detail',movies_pk)
+```
+
+
+
+* detail.html
+
+```html
+{% block body %}
+<h1> 상세 페이지^^</h1>
+<h2>{{movie.pk}}번 째 글</h2>
+<h4>제목 : {{movie.title}}</h4>
+<h5>내용 : {{movie.content}}</h5>
+<p>생성 시간 : {{movie.created_at}}</p>
+<p>수정 시간 : {{movie.updated_at}}</p>
+<a href="{% url 'movies:edit' movie.pk %}">수정</a>  <!--추가한 부분-->
+<a href="{% url 'movies:delete' movie.pk %}">삭제</a>
+<a href="{% url 'movies:index' %}">[back]</a>
+{% endblock %}
+
+```
+
+* edit.html
+
+```html
+{% block body %}
+<form action="{% url 'movies:update' movie.pk %}" method="POST">
+  {% csrf_token %}
+  {{ movie.pk }}번 째 글
+  제목 : <input type="text" name="edit_title" value="{{ movie.title }}">
+  내용 : <input type="text" name="edit_content" value="{{ movie.content }}">
+
+  <input type="submit" value="수정하기">
+</form>
+
+<a href="{% url 'movies:index' %}">[back]</a>
+{% endblock %}
+```
 
 
 
