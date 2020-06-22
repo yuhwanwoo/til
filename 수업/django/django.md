@@ -895,3 +895,329 @@ def update(request, movies_pk):
 
 
 
+### django relation
+
+
+
+* models.py
+
+```python
+from django.db import models
+
+# Create your models here.
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.pk}번째 글, {self.title}-{self.content}'
+
+class Comment(models.Model):
+    # models.ForeignKey(상속받을 클래스명, Article이 삭제되었을때 어떻게 할것인지)
+    # 멤버 변수 = models.외래키(참조하는 객체)
+    article=models.ForeignKey(Article, on_delete=models.CASCADE) 
+    content=models.CharField(max_length=200)
+    created_at=models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Article:{self.article}, {self.pk}-{self.content}'
+```
+
+
+
+라이브러리 설치
+
+```bash
+pip install django-extensions
+```
+
+
+
+ 
+
+* settings.py
+
+  설치한것을 settings에서 설정을 해줘야함 설치할때는 -였지만 설정할때는 _로해야함
+
+```python
+INSTALLED_APPS = [
+    'django_extensions'    #django-extensions가 아니다
+    'articles',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+```
+
+
+
+shell을 plus로 킨다
+
+```bash
+student@M16015 MINGW64 ~/Desktop/django_relation/django_relation/mysite (master)
+$ python manage.py shell_plus
+```
+
+
+
+내용 확인해보면
+
+```bash
+>>> Article.objects.all()
+<QuerySet [<Article: 1번째 글, 제목-내용>, <Article: 2번째 글, 제목-내용>]>
+>>> article=Article.objects.get(pk=1)
+>>> article
+<Article: 1번째 글, 제목-내용>
+>>>
+```
+
+
+
+```bash
+pip install ipython
+```
+
+
+
+다시 shell_plus로 이동
+
+```shell
+# Shell Plus Model Imports
+from articles.models import Article, Comment
+from django.contrib.admin.models import LogEntry
+from django.contrib.auth.models import Group, Permission, User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sessions.models import Session
+# Shell Plus Django Imports
+from django.core.cache import cache
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.db.models import Avg, Case, Count, F, Max, Min, Prefetch, Q, Sum, When, Exists, OuterRef, Subquery
+from django.utils import timezone
+from django.urls import reverse
+Python 3.7.6 (tags/v3.7.6:43364a7ae0, Dec 19 2019, 00:42:30) [MSC v.1916 64 bit (AMD64)]
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.15.0 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: 
+```
+
+쉘창이 달라져있는걸 확인할 수 있다.
+
+
+
+
+
+```shell
+In [1]: comment = Comment()
+
+In [2]: comment.content = '첫번째 댓글'
+
+In [3]: comment.save()
+---------------------------------------------------------------------------
+IntegrityError  
+```
+
+오류가 뜬다 - 게시물 연결 안되어 있어서!
+
+
+
+위에 입력한건 남아있기에 확인해보면
+
+```shell
+In [4]: article = Article.objects.get(pk=1)
+
+In [5]: comment.article = article
+
+In [6]: comment.save()
+```
+
+오류없다.
+
+
+
+comment 확인해보면
+
+```shell
+In [7]: comment
+Out[7]: <Comment: Article:1번째 글, 제목-내용, 1-첫번째 댓글>
+```
+
+
+
+READ
+
+```shell
+In [8]: comment.article
+Out[8]: <Article: 1번째 글, 제목-내용>
+
+In [9]: comment.article.title
+Out[9]: '제목'
+
+In [10]: comment.article.content
+Out[10]: '내용'
+
+In [11]: article.comment_set.all()
+Out[11]: <QuerySet [<Comment: Article:1번째 글, 제목-내용, 1-첫번째 댓글>]>
+
+```
+
+
+
+### form 써서 댓글 구현하기
+
+#### 댓글 생성
+
+forms.py로 가서
+
+```python
+from django import forms
+from .models import Article, Comment
+
+class ArticleForm(forms.ModelForm):
+    class Meta:
+        model = Article
+        fields = '__all__'
+
+class CommentForm(forms.ModelForm):
+    class Mete:
+        model = Comment
+        fields = '__all__'
+        #fields = '__all__'
+        exclude=['article']
+```
+
+
+
+* views.py
+
+```python
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Article, Comment # 여기서 Comment추가
+from .forms import ArticleForm, CommentForm # 여기서 CommentForm추가
+
+def detail(request, article_pk):
+    article = get_object_or_404(Article, pk=article_pk)
+    comment_form = CommentForm()
+    # 1은 N을 보장할 수 없기 때문에 querySet(comment_set)형태로 조회해야한다.
+    comments=article.comment_set.all()
+    context = {
+        'article': article,
+        'comments':comments,
+        'comment_form' : comment_form,
+    }
+    return render(request, 'articles/detail.html', context)
+
+# 댓글 생성
+@require_POST
+def comment_create(request,article_pk):  # 댓글 생성
+    #article = Article.objects.get(pk=article_pk)
+    article=get_object_or_404(Article, pk=article_pk)
+
+    comment_form = CommentForm(request.POST)
+    if comment_form.is_valid():
+        comment = comment_form.save(commit=False)
+        comment.article=article
+        #comment.article_id(자동으로 만들어줌) = article.pk
+        comment.save()
+        return redirect('articles:detail', article_pk)
+    else:
+        context={
+            'comment_form' : comment_form,
+            'article' : article
+        }
+    return redirect('articles:detail', context)
+
+# 댓글 삭제
+@require_POST
+def comment_delete(request, article_pk, comment_pk):
+    comment=get_object_or_404(Comment, pk=comment_pk)
+    comment.delete()
+    return redirect('articles:detail',article_pk)
+    
+
+```
+
+
+
+* urls.py
+
+```python
+#댓글 생성
+path('<int:article_pk>/comment_create/',views.comment_create, name="comment_create"),
+# 댓글 삭제
+path('<int:article_pk>/comment_delete/<int:comment_pk>/',views.comment_delete, name="comment_delete"),
+```
+
+
+
+* detail.html
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>상세 페이지</h1>
+<hr>
+<p>{{ article.pk }}번째 글</p>
+<h2>{{ article.title }}</h2>
+<h3>{{ article.content }}</h3>
+<hr>
+<p>{{ comments|length }}개의 댓글</p>
+<p>{{ article.comment_set.all|length }}</p>
+<ul>
+{% for comment in comments %}
+<li>{{ comment.content }}
+                                        <!-- 2개 이상의 값을 넘겨주고자 할 때 순서 주의-->
+  <form action="{% url 'articles:comment_delete' article.pk comment.pk %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="댓글 삭제">
+  </form>
+</li>
+{% empty %}
+<p>댓글이 없습니다.</p>
+{% endfor %}
+</ul>
+<hr>
+<form action="{% url 'articles:comment_create' article.pk %}" method="POST">
+  {% csrf_token %}
+  {{ comment_form }}
+  <input type="submit" value="댓글생성">
+</form>
+<hr>
+
+<a href="{% url 'articles:update' article.pk %}">[UPDATE]</a>
+<a href="{% url 'articles:index' %}">[back]</a>
+<form action="{% url 'articles:delete' article.pk %}" method="POST">
+  {% csrf_token %}
+  <input type="submit" value="DELETE" class="btn btn-primary">
+</form>
+
+{% endblock %}
+```
+
+
+
+* index.html
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>메인 페이지 입니다.</h1>
+<hr>
+<a href="{% url 'articles:create' %}">[CREATE]</a>
+<hr>
+{% for article in articles %}
+ <p>{{ article.pk }}번째 글</p>
+ <p>{{ article.title }}</p>
+ <a href="{% url 'articles:detail' article.pk %}">[DETAIL]</a>
+ <hr>
+{% endfor %}
+{% endblock %}
+```
+
