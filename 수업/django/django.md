@@ -895,7 +895,9 @@ def update(request, movies_pk):
 
 
 
-### django relation
+### django relation ( 이건 강사님 클론 받았어 ) 
+
+### ( repository는 django relation) 
 
 
 
@@ -1220,4 +1222,112 @@ path('<int:article_pk>/comment_delete/<int:comment_pk>/',views.comment_delete, n
 {% endfor %}
 {% endblock %}
 ```
+
+
+
+
+
+### django Login Logout
+
+# 앱을 새로 만든다.
+
+```bash
+student@M16015 MINGW64 ~/Desktop/django_relation/django_relation/mysite (master)
+$ python manage.py startapp accounts
+```
+
+
+
+* mysite/urls.py
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('articles/', include('articles.urls')),
+    path('accounts/', include('accounts.urls')),  #추가 시킨다
+]
+
+```
+
+* settings.py
+
+```python
+INSTALLED_APPS = [
+    'accounts',  				# 추가시킨다
+    'bootstrap4',
+    'django_extensions',
+    'articles',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+```
+
+
+
+accounts안에 templates폴더를 만들고 그 안에 accounts폴더를 만든다 그리고 signup.html을 만든다.
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<form action="">
+
+  {{ signup_form }}
+  <input type="submit" value="회원가입">
+</form>
+
+{% endblock %}
+```
+
+
+
+
+
+* accounts/views.py
+
+```python
+from django.shortcuts import render
+from django.contrib.auth.forms import UserCreationForm # 회원가입 할때 django에서 주는 폼
+
+# Create your views here.
+def signup(request):
+    signup_form = UserCreationForm()
+    context = {
+        'signup_form' : signup_form,
+    }
+    return render(request, 'accounts/signup.html', context)
+
+```
+
+
+
+* accounts에 urls.py를 만들어서
+
+```python
+from django.urls import path
+from . import views
+
+app_name = "accounts"
+
+urlpatterns = [
+    path('signup/', views.signup, name="signup"),
+
+]
+```
+
+
+
+서버를 켜서 확인해보면
+
+![image](https://user-images.githubusercontent.com/22831002/85364556-583a7200-b55e-11ea-93cf-8c7d69339432.png)
+
+완료
+
+
 
