@@ -194,7 +194,7 @@ Running migrations:
 
 
 
-### shell 사용해서 데이터베이스
+## shell 사용해서 데이터베이스
 
 * shell창으로 들어간다
 
@@ -1775,3 +1775,867 @@ def update(request):
 </html>
 ```
 
+
+
+* UserChangeForm 커스터마이징
+
+```python
+# accounts/forms.py
+from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth import get_user_model
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta:
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name']
+```
+
+```html
+<!-- update.html -->
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block body %}
+<form action="" method="post">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  {% buttons %}
+  <button type="submit" class="btn btn-primary">
+    회원 수정
+  </button>
+  {% endbuttons %}
+</form>
+{% endblock %}
+```
+
+
+
+#### 비밀번호 수정
+
+```python
+# accounts/views.py
+from django.contrib.auth.forms import PasswordChangeForm
+
+@login_required
+def password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            return redirect('articles:index')
+    else :
+        form = PasswordChangeForm(request.user)
+    context = {
+        'form' : form
+    }
+    return render(request, 'accounts/password.html', context)
+
+
+# accounts/urls.py
+path('password/', views.password, name="password"),
+```
+
+
+
+* 비밀번호 수정 후에도 세션을 유지시키기 위한 작업
+
+```python
+# accounts/views.py
+from django.contrib.auth import update_session_auth_hash
+
+@login_required
+def password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return redirect('articles:index')
+    else :
+        form = PasswordChangeForm(request.user)
+    context = {
+        'form' : form
+    }
+    return render(request, 'accounts/password.html', context)
+```
+
+=> 눈에 보이지 않는 세션 값이 기존과 그대로 유지한다.
+
+
+
+* base.html
+
+```html
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% bootstrap_css %}
+  <title>Document</title>
+</head>
+<body>
+  <h1>{{ user.username }}</h1>
+
+  {% if user.is_authenticated %}
+  <a href="{% url 'accounts:logout' %}">logout</a>
+  <form action="{% url 'accounts:delete' %}" method="post">
+    {% csrf_token %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">
+      회원 탈퇴
+    </button>
+    {% endbuttons %}
+  </form>
+  <a href="{% url 'accounts:update' %}">회원 수정</a>
+  <a href="{% url 'accounts:password' %}">비밀번호 수정</a> <!-- 추가 -->
+  {% else %}
+  <a href="{% url 'accounts:login' %}">login</a>
+  <a href="{% url 'accounts:signup' %}">회원가입</a>
+  {% endif %}
+  <div class="container">
+    {% block body %}
+    {% endblock %}
+  </div>
+  {% bootstrap_javascript jquery='full' %}
+</body>
+</html>
+```
+
+
+
+## Django 사용자 분할
+
+* Article 모델에 외래키 설정 후 마이그레이션 작업 진행
+  * 연결할 User 모델은 settings.AUTH_USER_MODEL이다.
+  * 마이그레이션 작업을 진행 시 기존의 데이터에 USER 정보가 없으므로 Default값 설정
+  * 현재 프로젝트의 admin 계정의 PK값을 찾아 해당 값을 Default로 설정.
+* CREATE 로직 수정 & 게시글 작성자 표기
+  * 게시글 생성 시, 게시글 작성자 정보를 넣어서 저장한다.
+* UPDATE & DELETE 로직 수정
+  * 사용자가 자신의 글만 수정/삭제 할 수 있도록 내부 로직 수정
+  * 해당 게시글의 작성자가 아니라면, 수정/삭제 버튼이 보이지 않도록 Template수정
+* user 모델을 외래키로 참조
+
+![image](https://user-images.githubusercontent.com/22831002/85643984-a8d1dc80-b6d0-11ea-973a-f9cf68ea2502.png)
+
+* 해당 사용자만 수정/삭제가 가능하도록 하자
+
+![image](https://user-images.githubusercontent.com/22831002/85647001-644a3f00-b6d8-11ea-877c-973c4a4a4ba2.png)
+
+* 객체는 생성하지만 DB에는 반영하지 않겠다.
+
+![image](https://user-images.githubusercontent.com/22831002/85644272-6d83dd80-b6d1-11ea-9ee6-7bfbce3f1e7f.png)
+
+![image](https://user-images.githubusercontent.com/22831002/85646147-67443000-b6d6-11ea-806a-9da0b8db9124.png)
+
+* 필요없는 field가 나오지 않도록 해주자
+
+![image](https://user-images.githubusercontent.com/22831002/85643520-5e9c2b80-b6cf-11ea-8649-73e3afa6ca3f.png)
+
+* html도 변경
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>상세 페이지</h1>
+<hr>
+<p>{{ article.pk }}번째 글</p>
+<h2>{{ article.title }}</h2>
+<h3>{{ article.content }}</h3>
+<hr>
+<p>{{ comments|length }}개의 댓글</p>
+<p>{{ article.comment_set.all|length }}</p>
+<ul>
+{% for comment in comments %}
+<li>{{ comment.content }}
+                                        <!-- 2개 이상의 값을 넘겨주고자 할 때 순서 주의-->
+  {% if comment.user.username == user.username %}      <!-- 이거 추가 -->
+  <form action="{% url 'articles:comment_delete' article.pk comment.pk %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="댓글 삭제">
+  </form>
+  {% endif %}      <!-- 이거 추가 -->
+</li>
+{% empty %}
+<p>댓글이 없습니다.</p>
+{% endfor %}
+</ul>
+<hr>
+<form action="{% url 'articles:comment_create' article.pk %}" method="POST">
+  {% csrf_token %}
+  {{ comment_form }}
+  <input type="submit" value="댓글생성">
+</form>
+<hr>
+{% if article.user.username == user.username %}      <!-- 이거 추가 -->
+<a href="{% url 'articles:update' article.pk %}">[UPDATE]</a>
+
+<form action="{% url 'articles:delete' article.pk %}" method="POST">
+  {% csrf_token %}
+  <input type="submit" value="DELETE" class="btn btn-primary">
+</form>
+{% endif %}      <!-- 이거 추가 -->
+<a href="{% url 'articles:index' %}">[back]</a>
+{% endblock %}
+```
+
+
+
+OperationalError: no such column가 떴었는데 그건 db바뀐거 적용 안해줘서 그렇다 
+
+$ python manage.py makemigrations
+$ python manage.py migrate
+
+이거 둘중 하나해서 해결하는데 만약 저렇게 해서 오류 크게 나면 그냥 db.sqlite3 파일을 삭제해서 DB날린 후에 실행하면된다. 
+
+
+
+## 메시지 출력하기
+
+```python
+# articles/views.py
+from django.contrib import messages
+
+@login_required
+def create(request):
+    if request.method == "POST":
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.user = request.user
+            article.save()
+            messages.success(request, '게시글 작성 완료') #
+            return redirect('articles:detail', article.pk)
+        else:
+            messages.error(request,'잘못된 데이터를 넣었어')
+    else:
+        form = ArticleForm()
+    context = {
+        'form': form
+    }
+    return render(request, 'articles/form.html', context)
+
+# settings.py
+import os
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.ERROR : 'danger',
+}
+```
+
+* base.html
+
+```html
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% bootstrap_css %}
+  <title>Document</title>
+</head>
+<body>
+  {% if messages %}						<!-- 여기서부터 추가 -->
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        {{ message.message }}
+      </div>
+    {% endfor %}
+  {% endif %}						<!-- 여기까지 추가 -->
+
+  <h1>{{ user.username }}</h1>
+  {% if user.is_authenticated %}
+  <a href="{% url 'accounts:logout' %}">logout</a>
+  <form action="{% url 'accounts:delete' %}" method="post">
+    {% csrf_token %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">
+      회원 탈퇴
+    </button>
+    {% endbuttons %}
+  </form>
+  <a href="{% url 'accounts:update' %}">회원 수정</a>
+  <a href="{% url 'accounts:password' %}">비밀번호 수정</a>
+  {% else %}
+  <a href="{% url 'accounts:login' %}">login</a>
+  <a href="{% url 'accounts:signup' %}">회원가입</a>
+  {% endif %}
+  <div class="container">
+    {% block body %}
+    {% endblock %}
+  </div>
+  {% bootstrap_javascript jquery='full' %}
+</body>
+</html>
+```
+
+
+
+## static 파일 관리하기
+
+#### image
+
+* blank = True
+  * 유효성 검사시
+* null = True
+  * DB상의 컴럼에 null이 가능. TextField에서는 사용하지 마세요
+
+```bash
+student@M16015 MINGW64 ~/Desktop/django_relation/django_relation/mysite (master)
+$ pip install Pillow  # Python image 관리
+```
+
+```python
+# articles/models.py
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    image = models.ImageField(blank=True, null=True)   #여기 추가
+```
+
+적용하기 위해서
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+* enc type 설정하기
+
+```html
+<!-- form.html -->
+<form action="" method="POST" enctype="multipart/form-data"> <!--submit부분 수정-->
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  {% buttons %}
+    <button type="submit" class="btn btn-primary">
+      Submit
+    </button>
+  {% endbuttons %}
+</form>
+
+<!-- detail.html -->
+{% extends 'base.html' %}
+{% block body %}
+<h1>상세 페이지</h1>
+<hr>
+<p>{{ article.pk }}번째 글</p>
+<h2>{{ article.title }}</h2>
+<h3>{{ article.content }}</h3>
+
+{% if article.image %}    <!-- 여기서부터 추가-->
+<img src="{{ article.image.url }}" alt="{{ article.image }}">
+{% endif %}				  <!-- 여기까지 추가-->
+
+<hr>
+<p>{{ comments|length }}개의 댓글</p>
+<p>{{ article.comment_set.all|length }}</p>
+<ul>
+{% for comment in comments %}
+<li>{{ comment.content }}
+    .......
+    .....
+    .......
+```
+
+
+
+```python
+# articles/views.py
+@login_required
+def create(request):
+    if request.method == "POST":
+        form = ArticleForm(request.POST, request.FILES)  # request.FILES를 추가했어
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.user = request.user
+            article.save()
+            messages.success(request, '게시글 작성 완료')
+            return redirect('articles:detail', article.pk)
+        else:
+            messages.error(request,'잘못된 데이터를 넣었어')
+    else:
+        form = ArticleForm()
+    context = {
+        'form': form
+    }
+    return render(request, 'articles/form.html', context)
+
+# settings.py에 밑에 두개 추가
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+```
+
+* mysite/urls.py
+
+![image](https://user-images.githubusercontent.com/22831002/85661134-548b2480-b6f1-11ea-9da9-e10b44e88b5c.png)
+
+
+
+확인해본다
+
+![image](https://user-images.githubusercontent.com/22831002/85661943-3ffb5c00-b6f2-11ea-8da1-75cdff37ba06.png)
+
+결과는??
+
+![image](https://user-images.githubusercontent.com/22831002/85662034-599ca380-b6f2-11ea-88ce-0b4f58505655.png)
+
+짜란~~
+
+#### 날짜별로 폴더 정리
+
+```python
+# articles/models.py
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    # blank = 유효성 검사시
+    # null = DB상에 컬럼에
+    image = models.ImageField(blank=True, upload_to="%y/%m/%d/")  # 이줄을 이렇게 수정한다. 
+
+    def __str__(self):
+        return f'{self.pk}번째 글, {self.title}-{self.content}'
+```
+
+
+
+글을 작성한 후 확인해보면
+
+![image](https://user-images.githubusercontent.com/22831002/85662645-1c84e100-b6f3-11ea-8625-99136014016b.png)
+
+#### 이미지 크기를 관리하는 방법
+
+```bash
+$ pip install pilkit
+$ pip install django-imagekit
+```
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    'imagekit',  # 이거 추가한다.
+]
+
+# models.py
+from imagekit.models import ImageSpecField
+from imagekit.processors import Thumbnail
+
+# Create your models here.
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    # blank = 유효성 검사시
+    # null = DB상에 컬럼에
+    image = models.ImageField(blank=True, upload_to="%y/%m/%d/")
+    image_thumbnail = ImageSpecField(     # 이 부분 추가
+        source = 'image',
+        processors = [Thumbnail(200, 300)],
+        format = 'jpeg',
+        options = {'quality': 90 }
+    )
+```
+
+#### user가 저장한 사진 별로 이미지 관리를  하고 싶은 경우 models.py
+
+![image](https://user-images.githubusercontent.com/22831002/85669931-522dc800-b6fb-11ea-883e-045a3d35ea20.png)
+
+![image](https://user-images.githubusercontent.com/22831002/85670177-97ea9080-b6fb-11ea-8605-596e7df073d1.png)
+
+## 1:N 관계 복습
+
+#### 게시글 생성 ORM
+
+```shell
+User.objects.create(username='test',password='test')
+```
+
+#### 게시글 생성 ORM
+
+```bash
+$ python manage.py shell_plus
+```
+
+```shell
+In [3]: user1=User.objects.get(pk=2)
+
+In [4]: user1
+Out[4]: <User: yuhwanwoo12>
+
+In [5]: Article.objects.create(title='aaaa', content='bbbbb',user=user1)
+Out[5]: <Article: 9번째 글, aaaa-bbbbb>
+
+In [6]: Article.objects.create(title='aaaa', content='bbbbb',user_id=user1.pk)
+Out[6]: <Article: 10번째 글, aaaa-bbbbb>
+```
+
+
+
+#### 댓글 생성 ORM
+
+```shell
+In [1]: comment=Comment.objects.get()
+
+In [2]: comment.article.pk
+Out[2]: 2
+
+In [3]: comment.article.title
+Out[3]: '2번제목'
+
+In [8]: user1=User.objects.get(pk=1)
+
+# article과 user의 입장에서 댓글과 게시글이 있는지 없는지 모르기 때문에 set.all()로 가져온다.
+In [6]: article.comment_set.all()
+Out[6]: <QuerySet []>
+In [9]: user1.article_set.all()
+Out[9]: <QuerySet [<Article: 2번째 글, 2번제목-2번내용>, <Article: 3번째 글, 3번제목-3번내용>, <Article: 5번째 글, mongoDB_title-mongoDB_content>, <Article: 6번째 글, mongogo_title-mongogo_content>, <Article: 7번째 글, hat_title-hat_content>, <Article: 8번째 글, title1first-1content>]>
+
+In [11]: for article in user1.article_set.all():  # 여기서 엔터치면 아래로 내려감
+    ...:     print(article.title)
+    2번제목
+	3번제목
+	mongoDB_title
+	mongogo_title
+	hat_title
+	title1first
+
+In [15]: article1=Article.objects.get(pk=3)
+
+In [16]: Comment.objects.create(content='content', user=user1, article=article1)
+Out[16]: <Comment: Article:3번째 글, 3번제목-3번내용, 5-content>
+```
+
+* 1:N 관계에서 N의 입장은 항상 참조하는 관계가 존재하고 1을 보장할 수 있기 때문에 바로바로 접근가능
+  * 1의 입장에서는 접근하는 방법이 달라진다.
+    * _set.all()
+
+#### 특정 게시글이 가지고 있는 전체 댓글 불러오기
+
+```shell
+article = Article.objects.get(pk=2)
+article.comment_set.all()
+= Article.objects.get(pk=?).comment_set.all()
+```
+
+#### 특정 댓글이 어느 게시글과 연결되어 있는지  확인하기
+
+```shell
+In [22]: comment=Comment.objects.get(pk=4)
+
+In [23]: comment.article.title
+Out[23]: '2번제목'
+```
+
+#### 특정 게시글이 어느 유저와 연결되어 있는지 확인하기
+
+```shell
+n [26]: article=Article.objects.get(pk=2)
+
+In [27]: article.user.username
+Out[27]: 'yuhwanwoo'
+```
+
+#### 특정 유저가 작성한 전체 게시글 가져오기
+
+```shell
+In [28]: user1=User.objects.get(pk=1)
+
+In [29]: user1.comment_set.all()
+Out[29]: <QuerySet [<Comment: Article:2번째 글, 2번제목-2번내용, 4-댓글이야>, <Comment: Article:3번째 글, 3번제목-3번내용, 5-content>]>
+```
+
+#### 특정 유저가 작성한 전체 댓글 가져오기
+
+```shell
+In [30]: user1=User.objects.get(pk=1)
+
+In [31]: user1.comment_set.all()
+Out[31]: <QuerySet [<Comment: Article:2번째 글, 2번제목-2번내용, 4-댓글이야>, <Comment: Article:3번째 글, 3번제목-3번내용, 5-content>]>
+```
+
+
+
+## M:N 관계
+
+### ex) 의사-환자 모델링
+
+```bash
+# 새로운 앱 생성
+student@M16015 MINGW64 ~/Desktop/django_relation/django_relation/mysite (master)
+$ python manage.py startapp modelrelation
+```
+
+* settings.py
+
+```python
+INSTALLED_APPS = [
+    'modelrelation',  # 추가시킨다.
+]
+```
+
+* modelrelation/models.py
+
+```python
+from django.db import models
+
+# Create your models here.
+class Doctor(models.Model):
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.pk}번 의사 {self.name}'
+
+class Patient(models.Model):
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.pk}번 환자 {self.name}'
+
+class Reservation(models.Model):
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.doctor}의 {self.patient}'
+```
+
+적용 시키기 위해서
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+그 후
+
+```bash
+$ python manage.py shell_plus
+```
+
+```shell
+In [1]: doctor = Doctor.objects.create(name='KIM')
+
+In [2]: patient = Patient.objects.create(name='TOM')
+
+In [3]: doctor
+Out[3]: <Doctor: 1번 의사 KIM>
+
+In [4]: patient
+Out[4]: <Patient: 1번 환자 TOM>
+
+# reservation을 활용해서 의사와 환자를 연결한다.
+In [5]: Reservation.objects.create(doctor=doctor, patient=patient)
+Out[5]: <Reservation: 1번 의사 KIM의 1번 환자 TOM>
+
+# 의사의 입장에서 예약정보를 가져오기
+# 1은 N을 보장할 수 없기 때문에
+In [6]: doctor.reservation_set.all()
+Out[6]: <QuerySet [<Reservation: 1번 의사 KIM의 1번 환자 TOM>]>
+
+# 환자의 입장에서 예약정보를 가져오기
+In [7]: patient.reservation_set.all()
+Out[7]: <QuerySet [<Reservation: 1번 의사 KIM의 1번 환자 TOM>]>
+
+# 2번환자 생성하고 연결하기
+In [8]: patient2 = Patient.objects.create(name='KANG')
+
+In [9]: Reservation.objects.create(doctor=doctor, patient=patient2)
+Out[9]: <Reservation: 1번 의사 KIM의 2번 환자 KANG>
+
+In [10]: doctor.reservation_set.all()
+Out[10]: <QuerySet [<Reservation: 1번 의사 KIM의 1번 환자 TOM>, <Reservation: 1번 의사 KIM의 2번 환자 KANG>]>
+
+# 의사1의 환자이름
+In [11]: for reservation in doctor.reservation_set.all():
+    ...:     print(reservation.patient.name)
+    ...: 
+TOM
+KANG
+
+# 의사1의 환자번호
+In [12]: for reservation in doctor.reservation_set.all():
+    ...:     print(reservation.patient.pk)
+    ...: 
+1
+2
+```
+
+* 위의 중개모델 말고도 조금 더 쉽게 가져올 수 있는 방법이 존재한다.(ManyToManyField)
+
+```python
+# modelrelation/models.py
+class Patient(models.Model):
+    name = models.CharField(max_length=20)
+    doctors = models.ManyToManyField(Doctor, through='Reservation') # 이 부분 추가
+
+```
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+```shell
+# 환자 입장에서 의사 가져오기
+In [1]: patient = Patient.objects.get(pk=1)
+
+In [2]: patient.doctors.all()
+Out[2]: <QuerySet [<Doctor: 1번 의사 KIM>]>
+
+# 의사 입장에서 환자 가져오기
+In [3]: doctor = Doctor.objects.get(pk=1)
+
+In [4]: doctor.patient_set.all()
+Out[4]: <QuerySet [<Patient: 1번 환자 TOM>, <Patient: 2번 환자 KANG>]>
+```
+
+
+
+patients로만 가져오게 하기
+
+![image](https://user-images.githubusercontent.com/22831002/85685622-3382fd80-b70a-11ea-87ec-98315873c630.png)
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+$ python manage.py shell_plus
+```
+
+
+
+```shell
+# 이제는 patient_set.all()로 가져올 수 없고 지정한 patients로만 가져올 수 있다.
+In [1]: doctor = Doctor.objects.get(pk=1)
+
+In [2]: doctor.patients.all()
+Out[2]: <QuerySet [<Patient: 1번 환자 TOM>, <Patient: 2번 환자 KANG>]>
+```
+
+**=> related_name을 쓸거면 reservation 클래스가 필요없다.**
+
+![image](https://user-images.githubusercontent.com/22831002/85691352-64b1fc80-b70f-11ea-92ff-ec2a8ab46d35.png)
+
+```bash
+
+# DB 지우고 0001~~~ 이런파일들 다 삭제했어
+$ python manage.py makemigrations
+$ python manage.py migrate
+$ python manage.py shell_plus
+
+############### ralated_name="patients" 에서 원래 'patients'로 했는데
+############### 안됐어 ""로 하니까 됨(이유는 모르겠다)
+```
+
+```shell
+In [1]: doctor = Doctor.objects.create(name='KIM')
+
+In [2]: patient = Patient.objects.create(name='TOM')
+
+# 환자 추가
+In [3]: doctor.patients.add(patient)
+
+In [4]: doctor.patients.all()
+Out[4]: <QuerySet [<Patient: 1번 환자 TOM>]>
+
+# 환자 제거
+In [5]: doctor.patients.remove(patient)
+
+In [6]: doctor.patients.all()
+Out[6]: <QuerySet []>
+```
+
+
+
+**추가 필드가 요구될 시에는 중개모델(ex. Reservation class)을 만들어줘야한다.**
+
+
+
+## 게시글 좋아요 만들기
+
+```python
+# articles/models.py
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    # blank = 유효성 검사시
+    # null = DB상에 컬럼에
+    image = models.ImageField(blank=True, upload_to=articles_image_path)
+    image_thumbnail = ImageSpecField(
+        source = 'image',
+        processors = [Thumbnail(200, 300)],
+        format = 'jpeg',
+        options = {'quality': 90 }
+    )
+    like_users = models.ManyToManyField(    # 이 부분 추가
+        settings.AUTH_USER_MODEL,
+        related_name='like_articles',
+        blank=True
+    )
+    
+# articles/urls.py
+path('<int:article_pk>/like/', views.like, name="like"),
+
+# articles/views.py
+@login_required
+def like(request, article_pk):
+    # 특정 게시물에 대한 정보
+    article = get_object_or_404(Article, pk=article_pk)
+    # 좋아요를 누른 유저에 대한 정보
+    user = request.user
+    # 사용자가 게시글의 좋아요 목록에 있으면 지우고 없으면 추가한다.
+    if user in article.like_users.all():
+        article.like_users.remove(user)
+    else:
+        article.like_users.add(user)
+    return redirect('articles:index')
+
+```
+
+models.py를 바꿨으니
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+![image](https://user-images.githubusercontent.com/22831002/85698726-e2790680-b715-11ea-8bd1-e47078875e9c.png)
+
+* font awesome 사용하기
+  * base.html에 kit code를 붙여 넣는다
+
+![image](https://user-images.githubusercontent.com/22831002/85699358-6b903d80-b716-11ea-8be1-65977212c106.png)
+
+```html
+<!-- base.html -->
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% bootstrap_css %}
+    <!-- 여기 아래 추가 -->
+  <script src="https://kit.fontawesome.com/974786e77b.js" crossorigin="anonymous"> </script>
+  <title>Document</title>
+</head>
+<body>
+```
+
+
+
+* 좋아요를 하나의 모듈로 만들기
