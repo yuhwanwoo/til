@@ -2638,4 +2638,366 @@ $ python manage.py migrate
 
 
 
-* 좋아요를 하나의 모듈로 만들기
+* 좋아요를 하나의 모듈로 만들기 + 추천
+
+```html
+<!-- _like.html -->
+{% if user in article.like_users.all %}
+<a href="{% url 'articles:like' article.pk %}">좋아요 취소<i class="fas fa-thumbs-down"></i></a>
+{% else %}
+<a href="{% url 'articles:like' aricle.pk %}"> 좋아요<i class="fas fa-thumbs-upp"></i></a>
+{% endif %}
+
+<div class="col-lg-2">    <!-- 이 부분은 추천 -->
+  {% if user in article.recommend_users.all %}
+  <a href="{% url 'articles:recommend' article.pk %}">추천 취소</a>
+  {% else %}
+  <a href="{% url 'articles:recommend' article.pk %}">추천</a>
+  {% endif %}
+</div>
+
+<!-- index.html (넣고 싶은 부분에 include를 이용-->
+<!-- 최종 index.html -->
+{% extends 'base.html' %}
+{% block body %}
+<h1>메인 페이지 입니다.</h1>
+<hr>
+<a href="{% url 'articles:create' %}">[CREATE]</a>
+<hr>
+<p>{{ articles.all|length }}개의 글</p>
+<hr>
+{% for article in articles %}
+ <p>{{ article.pk }}번째 글</p>
+ <h2>{{ article.title }}</h2>
+<p>좋아요 개수 : {{ article.like_users.all|length }}</p>
+<p>추천 개수 : {{ article.recommend_users.all|length }}</p>
+<p>댓글 개수 : {{ article.comment_set.all|length }}</p>
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-2">
+      {% include 'articles/_like.html' %}
+    </div>
+
+    <div class="col-lg-2">
+      <a href="{% url 'articles:detail' article.pk %}">[DETAIL]</a>
+    </div>
+  </div>
+</div>
+ <hr>
+ 
+{% endfor %}
+{% endblock %}
+```
+
+```python
+# articles/urls.py
+path('<int:article_pk>/recommend/', views.recommend, name="recommend"),
+
+# articles/views.py
+@login_required
+def recommend(request, article_pk):
+    article = get_object_or_404(Article, pk=article_pk)
+    user = request.user
+    if user in article.recommend_users.all():
+        article.recommend_users.remove(user)
+    else:
+        article.recommend_users.add(user)
+    return redirect('articles:index')
+
+# articles/models.py
+class Article(models.Model):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    # blank = 유효성 검사시
+    # null = DB상에 컬럼에
+    image = models.ImageField(blank=True, upload_to=articles_image_path)
+    image_thumbnail = ImageSpecField(
+        source = 'image',
+        processors = [Thumbnail(200, 300)],
+        format = 'jpeg',
+        options = {'quality': 90 }
+    )
+    like_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='like_articles',
+        blank=True
+    )
+
+    recommend_users = models.ManyToManyField(    # 이 부분 추가 (추천)
+        settings.AUTH_USER_MODEL,
+        related_name='recommend_articles',
+        blank=True
+    )
+```
+
+models.py를 바꿨으니
+
+```bash
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+
+
+## 프로필 만들기
+
+```python
+# accounts/urls.py
+path('<str:username>/', views.prifile, name="profile"),
+
+# accounts/views.py
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+
+def profile(request, username):
+    person = get_object_or_404(get_user_model(), username=username)
+    context={
+        'person' : person
+    }
+    return render(request, 'accounts/profile.html', context)
+
+```
+
+```php+HTML
+<!--profile.html-->
+{% extends 'base.html' %}
+{% block body %}
+<h3>{{ person.username }}</h3>
+<!-- 유저가 작성한 모든 게시물 -->
+<p>유저가 작성한 게시글들</p>
+<ul>
+  {% for article in person.article_set.all %}
+  <li>{{ article.title }}</li>
+  <li>{{ article.content }}</li>
+  {% endfor %}
+</ul>
+
+<p>유저가 작성한 댓글들</p>
+<ul>
+  {% for comment in person.comment_set.all %}
+  <li>{{ comment.content }}</li>
+  {% empty %}
+  <p>댓글을 단 적이 없습니다.</p>
+  {% endfor %}
+</ul>
+
+<p>유저가 좋아요를 누른 게시글</p>
+<ul>
+  {% for comment in person.like_articles.all %}
+  <li>{{ like.content }}</li>
+  {% empty %}
+  <p>좋아요를 누른 적이 없습니다.</p>
+  {% endfor %}
+</ul>
+
+{% endblock %}
+
+<!--base.html-->
+<!--이 부분을 추가한다.-->
+ {% if user.is_authenticated %} 
+    <a class="navbar-brand" href="{% url 'accounts:profile' user.username %}">{{ user.username }}</a>
+    {% endif %}
+```
+
+## 팔로우하기
+
+* `get_user_model` vs `AUTH_USER_MODEL`
+  * 전자는 객체를 반환하기 때문에 accounts를 바라보게 된다? => 활성화된 객체를 찾아간다.
+  * 후자는 스트링값 반환 => migrations -> migrate 과정에서 문자열이기 때문에 원활하게 진행
+* articles에 있는 models.py에서는 AUTH_USER_MODEL을 사용
+* accounts에 있는 models.py에서는 get_user_model을 사용
+* Models.py에서 정의할 때 빼고는 전부 get_user_model을 사용하면 된다!
+
+```python
+# accounts/admin.py
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .models import User
+
+admin.site.register(User, UserAdmin)
+
+# accounts/models.py
+from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+
+class User(AbstractUser):
+    followers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="followings",
+        blank=True
+    )
+# 추가로 forms.py도 커스터마이징 해줘야한다.
+# accounts.forms.py
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm # 여기 이렇게
+from django.contrib.auth import get_user_model
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta:
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name']
+
+class CustomUserCreationForm(UserCreationForm): # 여기 추가
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()
+        # fields =
+        
+# accounts/views.py
+from .forms import CustomUserCreationForm
+
+# settings.py
+AUTH_USER_MODEL = 'accounts.User'  # AUTH_USER_MODEL이 바라보는곳을 다르게 만들어야해
+```
+
+UserCreationForm.Meta를 써주면 기존에 있는 Meta를 쓰기 때문에 필드를 생략해도 된다.
+
+```python
+# 기존 에서
+def signup(request):    
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            return redirect('articles:index')
+    else:
+        form = UserCreationForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'accounts/signup.html', context)
+
+# 이렇게 바꾼다.
+def signup(request):    
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            return redirect('articles:index')
+    else:
+        form = CustomUserCreationForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'accounts/signup.html', context)
+
+# accounts/urls.py
+urlpatterns = [
+    path('signup/', views.signup, name="signup"),
+    path('login/', views.login, name="login"),
+    path('logout', views.logout, name="logout"),
+    path('delete/', views.delete, name="delete"),
+    path('update/', views.update, name="update"),
+    path('password/', views.password, name="password"),
+    path('follow/<int:user_pk>/', views.follow, name="follow"),  # 여기에 추가했다
+    path('<str:username>/', views.profile, name="profile"), # 문자열 하나만 받을 친구는 밑에 둬야한다.(오류생김)
+]
+
+# accounts/views.py
+def follow(request, user_pk):
+    # person에 담긴 user_pk값을 가진 유저는
+    # 프로필의 주인이다.
+    # request.user는 나. 요청을 보내온 사용자이다
+    person = get_object_or_404(get_user_model(), pk=user_pk)
+    if request.user in person.followers.all():
+        person.followers.remove(request.user)
+    else :
+        person.followers.add(request.user)
+    return redirect('accounts:profile',person.username)
+```
+
+```html
+<!--profile.html-->
+{% extends 'base.html' %}
+{% block body %}
+<h3>{{ person.username }}</h3>
+<!-- 팔로우 로직 구현-->
+{% if user != person %} <!-- 본인일때는 팔로우 안보이도록-->
+{% if user in person.followers.all %}
+<a href="{% url 'accounts:follow' person.pk %}">팔로우 취소</a>
+{% else %}
+<a href="{% url 'accounts:follow' person.pk %}">팔로우</a>
+{% endif %}
+{% endif %}
+...
+...
+...
+```
+
+**DB다 지우고 makemigrations와 migrate한다**
+
+
+
+## 페이징 구현
+
+```python
+# articles/views.py
+from django.core.paginator import Paginator
+
+def index(request):  #index 부분을 수정한다.(paging 추가)
+    #embed()
+    articles = Article.objects.all()
+    # 1. Paginator(전체 리스트, 한 페이지당 개수)
+    paginator = Paginator(articles, 3)
+    # 2. 몇 번째 페이지를 보여줄 것인지 GET으로 받
+    # 'articles/?page=3'
+    page = request.GET.get('page')
+    # 해당하는 페이지의 게시글만 가져오기
+    articles = paginator.get_page(page)
+    context = {
+        'articles': articles
+    }
+    return render(request, 'articles/index.html', context)
+
+```
+
+
+
+* index.html
+
+```html
+{% extends 'base.html' %}
+{% block body %}
+<h1>메인 페이지 입니다.</h1>
+<hr>
+<a href="{% url 'articles:create' %}">[CREATE]</a>
+<hr>
+<p>{{ articles.all|length }}개의 글</p>
+<hr>
+{% for article in articles %}
+ <p>{{ article.pk }}번째 글</p>
+ <h2>{{ article.title }}</h2>
+<p>좋아요 개수 : {{ article.like_users.all|length }}</p>
+<p>추천 개수 : {{ article.recommend_users.all|length }}</p>
+<p>댓글 개수 : {{ article.comment_set.all|length }}</p>
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-2">
+      {% include 'articles/_like.html' %}
+    </div>
+
+    <div class="col-lg-2">
+      <a href="{% url 'articles:detail' article.pk %}">[DETAIL]</a>
+    </div>
+  </div>
+</div>
+ <hr>
+ 
+{% endfor %}
+{% for num in articles.paginator.page_range %}
+<a href="{% url articles:index' %}?page={{ num }}">{{ num }}</a>
+{% endfor %}
+{% endblock %}
+```
+
+
+
+아이디 2개를 만들어 주소로 내 아이디 말고 다른 사람 아이디를 들어가보면
+
+![image](https://user-images.githubusercontent.com/22831002/85811879-2ada0800-b79a-11ea-9c99-8b654ea9ddf0.png)
