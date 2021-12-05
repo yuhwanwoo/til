@@ -6,3 +6,7 @@
 
 #### :apple:[[ http \] 06. HTTP 상태코드](https://yanoo.tistory.com/101) 등록
 
+### 2021-12-05
+
+#### :apple:[[ http \] 07. HTTP 헤더(1)](https://yanoo.tistory.com/103) 등록
+
