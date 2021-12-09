@@ -10,3 +10,11 @@
 
 #### :apple:[[ http \] 07. HTTP 헤더(1)](https://yanoo.tistory.com/103) 등록
 
+### 2021-12-08
+
+#### :apple:[[ http \] 08. HTTP 헤더(쿠키)](https://yanoo.tistory.com/106) 등록
+
+### 2021-12-10
+
+#### :apple:[[ http \] 09. HTTP 헤더(2) - 캐시와 조건부 요청](https://yanoo.tistory.com/109) 등록
+
